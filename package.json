@@ -7,11 +7,13 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
+    "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "start": "cross-env NODE_ENV=production node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed:ayurveda": "node src/utils/ayurveda.seed.js",
-    "seed:yoga": "node src/utils/yoga.seed.js"
+    "seed:ayurveda:dev": "cross-env NODE_ENV=development node src/utils/ayurveda.seed.js",
+    "seed:yoga:dev": "cross-env NODE_ENV=development node src/utils/yoga.seed.js",
+    "seed:ayurveda": "cross-env NODE_ENV=production node src/utils/ayurveda.seed.js",
+    "seed:yoga": "cross-env NODE_ENV=production node src/utils/yoga.seed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -25,6 +27,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.14"
   }
 }

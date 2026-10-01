@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+const nodeEnv = process.env.NODE_ENV || "development";
+
+dotenv.config({
+  path: nodeEnv === "production" ? ".env.production" : ".env.development",
+});
 
 const requiredEnvVariables = [
   "MONGODB_URI",
