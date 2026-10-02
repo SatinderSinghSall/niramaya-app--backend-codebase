@@ -15,6 +15,10 @@ export const getYogaItems = async ({
     isActive: true,
   };
 
+  // ─────────────────────────
+  // FILTERS
+  // ─────────────────────────
+
   if (type) {
     filter.type = type;
   }
@@ -30,6 +34,10 @@ export const getYogaItems = async ({
   if (featured === true) {
     filter.isFeatured = true;
   }
+
+  // ─────────────────────────
+  // SEARCH
+  // ─────────────────────────
 
   if (search) {
     filter.$or = [
@@ -51,10 +59,29 @@ export const getYogaItems = async ({
           $options: "i",
         },
       },
+      {
+        bodyFocus: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        equipment: {
+          $regex: search,
+          $options: "i",
+        },
+      },
     ];
   }
 
-  const skip = (page - 1) * limit;
+  // ─────────────────────────
+  // PAGINATION
+  // ─────────────────────────
+
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const currentLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+
+  const skip = (currentPage - 1) * currentLimit;
 
   const [items, total] = await Promise.all([
     Yoga.find(filter)
@@ -63,24 +90,31 @@ export const getYogaItems = async ({
         createdAt: -1,
       })
       .skip(skip)
-      .limit(limit)
+      .limit(currentLimit)
       .lean(),
 
     Yoga.countDocuments(filter),
   ]);
 
+  const totalPages = Math.ceil(total / currentLimit);
+
   return {
     items,
+
     pagination: {
-      page,
-      limit,
+      page: currentPage,
+      limit: currentLimit,
       total,
-      totalPages: Math.ceil(total / limit),
-      hasNextPage: page < Math.ceil(total / limit),
-      hasPreviousPage: page > 1,
+      totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
     },
   };
 };
+
+// ─────────────────────────
+// GET YOGA BY ID
+// ─────────────────────────
 
 export const getYogaItemById = async (id) => {
   const item = await Yoga.findOne({
@@ -96,6 +130,39 @@ export const getYogaItemById = async (id) => {
 
   return item;
 };
+
+// ─────────────────────────
+// INCREMENT VIEW COUNT
+// ─────────────────────────
+
+export const incrementYogaViewCount = async (id) => {
+  const item = await Yoga.findOneAndUpdate(
+    {
+      _id: id,
+      isActive: true,
+    },
+    {
+      $inc: {
+        viewCount: 1,
+      },
+    },
+    {
+      new: true,
+    },
+  ).lean();
+
+  if (!item) {
+    const error = new Error("Yoga item not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return item;
+};
+
+// ─────────────────────────
+// GET YOGA CATEGORIES
+// ─────────────────────────
 
 export const getYogaCategories = async () => {
   const categories = await Yoga.aggregate([
@@ -125,7 +192,13 @@ export const getYogaCategories = async () => {
   }));
 };
 
+// ─────────────────────────
+// GET FEATURED YOGA
+// ─────────────────────────
+
 export const getFeaturedYoga = async (limit = 10) => {
+  const currentLimit = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
   return Yoga.find({
     isActive: true,
     isFeatured: true,
@@ -133,9 +206,14 @@ export const getFeaturedYoga = async (limit = 10) => {
     .sort({
       createdAt: -1,
     })
-    .limit(limit)
+    .limit(currentLimit)
     .lean();
 };
+
+// ─────────────────────────
+// PERSONALIZED YOGA
+// RECOMMENDATIONS
+// ─────────────────────────
 
 export const getPersonalizedYogaRecommendations = async (userId) => {
   const [healthProfile, goals] = await Promise.all([
@@ -149,6 +227,10 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
     }).lean(),
   ]);
 
+  // ─────────────────────────
+  // HEALTH PROFILE REQUIRED
+  // ─────────────────────────
+
   if (!healthProfile) {
     return {
       profileAvailable: false,
@@ -158,7 +240,9 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
     };
   }
 
-  const scores = new Map();
+  // ─────────────────────────
+  // USER PROFILE DATA
+  // ─────────────────────────
 
   const energyLevel = healthProfile.physicalHealth?.energyLevel;
 
@@ -170,6 +254,10 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
 
   const yogaExperience = healthProfile.fitness?.yogaExperience;
 
+  // ─────────────────────────
+  // USER CONCERNS
+  // ─────────────────────────
+
   const concerns = [
     ...(healthProfile.physicalHealth?.skinConcerns || []),
     ...(healthProfile.physicalHealth?.hairConcerns || []),
@@ -179,34 +267,52 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
       : []),
   ]
     .filter(Boolean)
-    .map((item) => item.toLowerCase());
+    .map((item) => item.toLowerCase().trim());
+
+  // ─────────────────────────
+  // USER GOALS
+  // ─────────────────────────
 
   const goalCategories = goals
     .map((goal) => goal.category)
     .filter(Boolean)
-    .map((category) => category.toLowerCase());
+    .map((category) => category.toLowerCase().trim());
+
+  // ─────────────────────────
+  // GET ACTIVE YOGA CONTENT
+  // ─────────────────────────
 
   const items = await Yoga.find({
     isActive: true,
   }).lean();
+
+  const scores = new Map();
+
+  // ─────────────────────────
+  // SCORE EACH YOGA ITEM
+  // ─────────────────────────
 
   for (const item of items) {
     let score = 0;
 
     const recommendation = item.recommendedFor || {};
 
+    // Energy level
     if (energyLevel && recommendation.energyLevels?.includes(energyLevel)) {
       score += 3;
     }
 
+    // Stress level
     if (stressLevel && recommendation.stressLevels?.includes(stressLevel)) {
       score += 4;
     }
 
+    // Sleep quality
     if (sleepQuality && recommendation.sleepQualities?.includes(sleepQuality)) {
       score += 4;
     }
 
+    // Activity level
     if (
       activityLevel &&
       recommendation.activityLevels?.includes(activityLevel)
@@ -214,6 +320,7 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
       score += 2;
     }
 
+    // Yoga experience
     if (
       yogaExperience &&
       recommendation.yogaExperience?.includes(yogaExperience)
@@ -221,30 +328,45 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
       score += 3;
     }
 
+    // User concerns
     for (const concern of concerns) {
       if (recommendation.concerns?.includes(concern)) {
         score += 4;
       }
 
-      if (item.tags?.includes(concern)) {
+      if (item.tags?.some((tag) => tag.toLowerCase() === concern)) {
+        score += 2;
+      }
+
+      if (
+        item.bodyFocus?.some((bodyPart) => bodyPart.toLowerCase() === concern)
+      ) {
         score += 2;
       }
     }
 
+    // User goals
     for (const goalCategory of goalCategories) {
       if (recommendation.goalCategories?.includes(goalCategory)) {
         score += 5;
       }
     }
 
+    // Featured content gets a small ranking boost
     if (item.isFeatured) {
       score += 1;
     }
 
+    // Only include items that have at least
+    // one matching recommendation signal.
     if (score > 0) {
       scores.set(String(item._id), score);
     }
   }
+
+  // ─────────────────────────
+  // SORT + LIMIT
+  // ─────────────────────────
 
   const recommendations = items
     .filter((item) => scores.has(String(item._id)))
@@ -256,6 +378,10 @@ export const getPersonalizedYogaRecommendations = async (userId) => {
       ...item,
       recommendationScore: scores.get(String(item._id)),
     }));
+
+  // ─────────────────────────
+  // RESPONSE
+  // ─────────────────────────
 
   return {
     profileAvailable: true,

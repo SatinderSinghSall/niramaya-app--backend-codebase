@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const yogaSchema = new mongoose.Schema(
   {
+    // ─────────────────────────
+    // BASIC INFORMATION
+    // ─────────────────────────
+
     title: {
       type: String,
       required: true,
@@ -24,6 +28,26 @@ const yogaSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000,
     },
+
+    // ─────────────────────────
+    // MEDIA
+    // ─────────────────────────
+
+    imageUrl: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    videoUrl: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    // ─────────────────────────
+    // CLASSIFICATION
+    // ─────────────────────────
 
     type: {
       type: String,
@@ -65,11 +89,35 @@ const yogaSchema = new mongoose.Schema(
       index: true,
     },
 
+    // ─────────────────────────
+    // DURATION & PRACTICE
+    // ─────────────────────────
+
     durationMinutes: {
       type: Number,
       min: 1,
       max: 180,
     },
+
+    equipment: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
+
+    bodyFocus: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
+
+    // ─────────────────────────
+    // CONTENT
+    // ─────────────────────────
 
     tags: [
       {
@@ -118,58 +166,23 @@ const yogaSchema = new mongoose.Schema(
       },
     ],
 
+    // ─────────────────────────
+    // PERSONALIZATION
+    // ─────────────────────────
+
     recommendedFor: {
-      energyLevels: [
-        {
-          type: String,
-          trim: true,
-        },
-      ],
-
-      stressLevels: [
-        {
-          type: String,
-          trim: true,
-        },
-      ],
-
-      sleepQualities: [
-        {
-          type: String,
-          trim: true,
-        },
-      ],
-
-      activityLevels: [
-        {
-          type: String,
-          trim: true,
-        },
-      ],
-
-      yogaExperience: [
-        {
-          type: String,
-          trim: true,
-        },
-      ],
-
-      concerns: [
-        {
-          type: String,
-          trim: true,
-          lowercase: true,
-        },
-      ],
-
-      goalCategories: [
-        {
-          type: String,
-          trim: true,
-          lowercase: true,
-        },
-      ],
+      energyLevels: [String],
+      stressLevels: [String],
+      sleepQualities: [String],
+      activityLevels: [String],
+      yogaExperience: [String],
+      concerns: [String],
+      goalCategories: [String],
     },
+
+    // ─────────────────────────
+    // CONTENT MANAGEMENT
+    // ─────────────────────────
 
     isActive: {
       type: Boolean,
@@ -181,30 +194,17 @@ const yogaSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    viewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
   },
 );
-
-yogaSchema.index({
-  type: 1,
-  category: 1,
-  isActive: 1,
-});
-
-yogaSchema.index({
-  difficulty: 1,
-  isActive: 1,
-});
-
-yogaSchema.index({
-  "recommendedFor.goalCategories": 1,
-});
-
-yogaSchema.index({
-  tags: 1,
-});
 
 const Yoga = mongoose.model("Yoga", yogaSchema);
 

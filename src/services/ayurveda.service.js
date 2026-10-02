@@ -2,9 +2,25 @@ import Ayurveda from "../models/ayurveda.model.js";
 import HealthProfile from "../models/healthProfile.model.js";
 import Goal from "../models/goal.model.js";
 
+const escapeRegex = (value = "") => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const addMatchValue = (set, value, amount) => {
+  if (value) {
+    set[value] = (set[value] || 0) + amount;
+  }
+};
+
+// ------------------------------------------------------------
+// Get Ayurveda items
+// ------------------------------------------------------------
+
 export const getAyurvedaItems = async ({
   type,
   category,
+  difficulty,
+  dosha,
   featured,
   search,
   page = 1,
@@ -22,34 +38,59 @@ export const getAyurvedaItems = async ({
     filter.category = category;
   }
 
+  if (difficulty) {
+    filter.difficulty = difficulty;
+  }
+
+  if (dosha) {
+    filter.doshas = dosha;
+  }
+
   if (featured === true) {
     filter.isFeatured = true;
   }
 
-  if (search) {
+  if (search?.trim()) {
+    const searchRegex = {
+      $regex: escapeRegex(search.trim()),
+      $options: "i",
+    };
+
     filter.$or = [
       {
-        title: {
-          $regex: search,
-          $options: "i",
-        },
+        title: searchRegex,
       },
       {
-        description: {
-          $regex: search,
-          $options: "i",
-        },
+        shortDescription: searchRegex,
       },
       {
-        tags: {
-          $regex: search,
-          $options: "i",
-        },
+        description: searchRegex,
+      },
+      {
+        tags: searchRegex,
+      },
+      {
+        benefits: searchRegex,
+      },
+      {
+        wellnessGoals: searchRegex,
+      },
+      {
+        bodySystems: searchRegex,
+      },
+      {
+        "ingredients.name": searchRegex,
+      },
+      {
+        doshas: searchRegex,
       },
     ];
   }
 
-  const skip = (page - 1) * limit;
+  const safePage = Math.max(Number(page) || 1, 1);
+  const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
+
+  const skip = (safePage - 1) * safeLimit;
 
   const [items, total] = await Promise.all([
     Ayurveda.find(filter)
@@ -58,24 +99,30 @@ export const getAyurvedaItems = async ({
         createdAt: -1,
       })
       .skip(skip)
-      .limit(limit)
+      .limit(safeLimit)
       .lean(),
 
     Ayurveda.countDocuments(filter),
   ]);
 
+  const totalPages = Math.ceil(total / safeLimit);
+
   return {
     items,
     pagination: {
-      page,
-      limit,
+      page: safePage,
+      limit: safeLimit,
       total,
-      totalPages: Math.ceil(total / limit),
-      hasNextPage: page < Math.ceil(total / limit),
-      hasPreviousPage: page > 1,
+      totalPages,
+      hasNextPage: safePage < totalPages,
+      hasPreviousPage: safePage > 1,
     },
   };
 };
+
+// ------------------------------------------------------------
+// Get Ayurveda item by ID
+// ------------------------------------------------------------
 
 export const getAyurvedaItemById = async (id) => {
   const item = await Ayurveda.findOne({
@@ -91,6 +138,42 @@ export const getAyurvedaItemById = async (id) => {
 
   return item;
 };
+
+// ------------------------------------------------------------
+// Increment view count
+// ------------------------------------------------------------
+
+export const incrementAyurvedaViewCount = async (id) => {
+  const item = await Ayurveda.findOneAndUpdate(
+    {
+      _id: id,
+      isActive: true,
+    },
+    {
+      $inc: {
+        viewCount: 1,
+      },
+    },
+    {
+      new: true,
+      returnDocument: "after",
+    },
+  )
+    .select("viewCount")
+    .lean();
+
+  if (!item) {
+    const error = new Error("Ayurveda item not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return item;
+};
+
+// ------------------------------------------------------------
+// Get categories
+// ------------------------------------------------------------
 
 export const getAyurvedaCategories = async () => {
   const categories = await Ayurveda.aggregate([
@@ -120,7 +203,13 @@ export const getAyurvedaCategories = async () => {
   }));
 };
 
+// ------------------------------------------------------------
+// Get featured Ayurveda
+// ------------------------------------------------------------
+
 export const getFeaturedAyurveda = async (limit = 10) => {
+  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 20);
+
   return Ayurveda.find({
     isActive: true,
     isFeatured: true,
@@ -128,15 +217,13 @@ export const getFeaturedAyurveda = async (limit = 10) => {
     .sort({
       createdAt: -1,
     })
-    .limit(limit)
+    .limit(safeLimit)
     .lean();
 };
 
-const addMatchValue = (set, value, amount) => {
-  if (value) {
-    set[value] = (set[value] || 0) + amount;
-  }
-};
+// ------------------------------------------------------------
+// Personalized Ayurveda recommendations
+// ------------------------------------------------------------
 
 export const getPersonalizedAyurvedaRecommendations = async (userId) => {
   const [healthProfile, goals] = await Promise.all([
@@ -162,9 +249,13 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
   const scores = new Map();
 
   const energyLevel = healthProfile.physicalHealth?.energyLevel;
+
   const digestion = healthProfile.physicalHealth?.digestion;
+
   const stressLevel = healthProfile.wellbeing?.stressLevel;
+
   const sleepQuality = healthProfile.sleep?.sleepQuality;
+
   const activityLevel = healthProfile.lifestyle?.activityLevel;
 
   const concerns = [
@@ -176,12 +267,12 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
       : []),
   ]
     .filter(Boolean)
-    .map((item) => item.toLowerCase());
+    .map((item) => String(item).toLowerCase().trim());
 
   const goalCategories = goals
     .map((goal) => goal.category)
     .filter(Boolean)
-    .map((category) => category.toLowerCase());
+    .map((category) => String(category).toLowerCase().trim());
 
   const items = await Ayurveda.find({
     isActive: true,
@@ -191,6 +282,10 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
     let score = 0;
 
     const recommendation = item.recommendedFor || {};
+
+    // ----------------------------------------------------------
+    // Health profile matching
+    // ----------------------------------------------------------
 
     if (energyLevel && recommendation.energyLevels?.includes(energyLevel)) {
       score += 3;
@@ -215,6 +310,10 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
       score += 2;
     }
 
+    // ----------------------------------------------------------
+    // User concerns
+    // ----------------------------------------------------------
+
     for (const concern of concerns) {
       if (recommendation.concerns?.includes(concern)) {
         score += 4;
@@ -223,13 +322,37 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
       if (item.tags?.includes(concern)) {
         score += 2;
       }
+
+      if (item.bodySystems?.includes(concern)) {
+        score += 2;
+      }
+
+      if (item.wellnessGoals?.includes(concern)) {
+        score += 2;
+      }
     }
+
+    // ----------------------------------------------------------
+    // User goals
+    // ----------------------------------------------------------
 
     for (const goalCategory of goalCategories) {
       if (recommendation.goalCategories?.includes(goalCategory)) {
         score += 5;
       }
+
+      if (item.wellnessGoals?.includes(goalCategory)) {
+        score += 3;
+      }
+
+      if (item.category === goalCategory) {
+        score += 3;
+      }
     }
+
+    // ----------------------------------------------------------
+    // Content quality / discovery boost
+    // ----------------------------------------------------------
 
     if (item.isFeatured) {
       score += 1;
@@ -243,7 +366,18 @@ export const getPersonalizedAyurvedaRecommendations = async (userId) => {
   const recommendations = items
     .filter((item) => scores.has(String(item._id)))
     .sort((a, b) => {
-      return scores.get(String(b._id)) - scores.get(String(a._id));
+      const scoreDifference =
+        scores.get(String(b._id)) - scores.get(String(a._id));
+
+      if (scoreDifference !== 0) {
+        return scoreDifference;
+      }
+
+      if (Boolean(b.isFeatured) !== Boolean(a.isFeatured)) {
+        return b.isFeatured ? 1 : -1;
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     })
     .slice(0, 10)
     .map((item) => ({

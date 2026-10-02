@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { notFound } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { connectDB } from "./config/db.js";
 
 import apiRoutes from "./routes/index.js";
 
@@ -49,6 +50,26 @@ app.get("/api/v1/health", (req, res) => {
     environment: env.nodeEnv,
     timestamp: new Date().toISOString(),
   });
+});
+
+/*
+ * Database connection
+ */
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database initialization failed:", {
+      name: error.name,
+      message: error.message,
+    });
+
+    res.status(503).json({
+      success: false,
+      message: "Database connection failed",
+    });
+  }
 });
 
 app.get("/", (req, res) => {

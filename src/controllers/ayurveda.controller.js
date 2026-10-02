@@ -4,6 +4,7 @@ import {
   getAyurvedaCategories,
   getFeaturedAyurveda,
   getPersonalizedAyurvedaRecommendations,
+  incrementAyurvedaViewCount,
 } from "../services/ayurveda.service.js";
 
 export const getAllAyurveda = async (req, res, next) => {
@@ -11,6 +12,8 @@ export const getAllAyurveda = async (req, res, next) => {
     const {
       type,
       category,
+      difficulty,
+      dosha,
       featured,
       search,
       page = 1,
@@ -20,6 +23,8 @@ export const getAllAyurveda = async (req, res, next) => {
     const result = await getAyurvedaItems({
       type,
       category,
+      difficulty,
+      dosha,
       featured: featured === "true",
       search,
       page: Math.max(Number(page) || 1, 1),
@@ -83,6 +88,21 @@ export const getPersonalizedRecommendations = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const incrementViewCount = async (req, res, next) => {
+  try {
+    const item = await incrementAyurvedaViewCount(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        viewCount: item.viewCount,
+      },
     });
   } catch (error) {
     next(error);
