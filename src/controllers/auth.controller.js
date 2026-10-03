@@ -48,10 +48,10 @@ export const refresh = async (req, res, next) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        message: "Refresh token is required",
-      });
+      const error = new Error("Refresh token is required");
+      error.statusCode = 400;
+      error.code = "REFRESH_TOKEN_REQUIRED";
+      throw error;
     }
 
     const result = await refreshUserToken(refreshToken);

@@ -19,9 +19,8 @@ export const registerUser = async ({
 
   if (existingUser) {
     const error = new Error("An account with this email already exists");
-
     error.statusCode = 409;
-
+    error.code = "EMAIL_ALREADY_EXISTS";
     throw error;
   }
 
@@ -55,22 +54,25 @@ export const loginUser = async ({ email, password }) => {
   );
 
   if (!user) {
-    const error = new Error("Invalid email or password");
-    error.statusCode = 401;
+    const error = new Error("User Not Found");
+    error.statusCode = 404;
+    error.code = "USER_NOT_FOUND";
     throw error;
   }
 
   if (!user.isActive) {
     const error = new Error("User account is inactive");
     error.statusCode = 403;
+    error.code = "ACCOUNT_INACTIVE";
     throw error;
   }
 
   const passwordMatches = await comparePassword(password, user.password);
 
   if (!passwordMatches) {
-    const error = new Error("Invalid email or password");
+    const error = new Error("Incorrect Password");
     error.statusCode = 401;
+    error.code = "INVALID_PASSWORD";
     throw error;
   }
 
@@ -97,6 +99,7 @@ export const refreshUserToken = async (refreshToken) => {
   if (payload.type !== "refresh") {
     const error = new Error("Invalid refresh token");
     error.statusCode = 401;
+    error.code = "INVALID_REFRESH_TOKEN";
     throw error;
   }
 
@@ -105,6 +108,7 @@ export const refreshUserToken = async (refreshToken) => {
   if (!user || !user.isActive || !user.refreshTokenHash) {
     const error = new Error("Invalid refresh token");
     error.statusCode = 401;
+    error.code = "INVALID_REFRESH_TOKEN";
     throw error;
   }
 
@@ -113,6 +117,7 @@ export const refreshUserToken = async (refreshToken) => {
   if (!matches) {
     const error = new Error("Invalid refresh token");
     error.statusCode = 401;
+    error.code = "INVALID_REFRESH_TOKEN";
     throw error;
   }
 
