@@ -10,6 +10,8 @@ import adminNotificationRoutes from "./adminNotification.routes.js";
 import adminGoalRoutes from "./adminGoal.routes.js";
 import adminProgressRoutes from "./adminProgress.routes.js";
 import adminApiLogRoutes from "./adminApiLog.routes.js";
+import adminAppConfigRoutes from "./adminAppConfig.routes.js";
+import adminMaintenanceRoutes from "./adminMaintenance.routes.js";
 
 const router = Router();
 
@@ -25,5 +27,7 @@ router.use("/notifications", adminNotificationRoutes);
 router.use("/goals", adminGoalRoutes);
 router.use("/progress", adminProgressRoutes);
 router.use("/api-logs", adminApiLogRoutes);
+router.use("/app-config", adminAppConfigRoutes);
+router.use("/maintenance", adminMaintenanceRoutes);
 
 export default router;

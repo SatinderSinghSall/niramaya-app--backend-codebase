@@ -1,0 +1,38 @@
+# Niramaya Backend Commands
+
+
+## Run Backend Server
+
+# Start backend server in development mode
+npm run dev
+
+# Start backend server in production mode
+npm start
+
+
+## Seed Yoga Data
+
+# Seed Yoga data for development environment
+npm run seed:yoga:dev
+
+# Seed Yoga data for production environment
+npm run seed:yoga
+
+
+## Seed Ayurveda Data
+
+# Seed Ayurveda data for development environment
+npm run seed:ayurveda:dev
+
+# Seed Ayurveda data for production environment
+npm run seed:ayurveda
+
+
+## Seed Admin Data
+
+# Seed admin data for production environment
+npm run seed:admin
+
+# Seed admin data for development environment
+npm run seed:admin:dev
+
