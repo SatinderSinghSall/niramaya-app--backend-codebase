@@ -33,4 +33,14 @@ export const env = {
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
 
   clientUrl: process.env.CLIENT_URL || "*",
+
+  jwtAdminAccessSecret:
+    process.env.JWT_ADMIN_ACCESS_SECRET || process.env.JWT_ACCESS_SECRET,
+
+  jwtAdminRefreshSecret:
+    process.env.JWT_ADMIN_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET,
+
+  jwtAdminAccessExpiresIn: process.env.JWT_ADMIN_ACCESS_EXPIRES_IN || "15m",
+
+  jwtAdminRefreshExpiresIn: process.env.JWT_ADMIN_REFRESH_EXPIRES_IN || "30d",
 };

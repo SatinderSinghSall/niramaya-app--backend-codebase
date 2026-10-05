@@ -14,6 +14,8 @@ import favoriteRoutes from "./favorite.routes.js";
 import searchRoutes from "./search.routes.js";
 import profileRoutes from "./profile.routes.js";
 
+import adminRoutes from "./admin.routes.js";
+
 const router = express.Router();
 
 router.use("/auth", authRoutes);
@@ -41,5 +43,7 @@ router.use("/favorites", favoriteRoutes);
 router.use("/search", searchRoutes);
 
 router.use("/profile", profileRoutes);
+
+router.use("/admin", adminRoutes);
 
 export default router;

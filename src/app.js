@@ -7,6 +7,7 @@ import { env } from "./config/env.js";
 import { notFound } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { connectDB } from "./config/db.js";
+import { apiLogger } from "./middlewares/apiLogger.middleware.js";
 
 import apiRoutes from "./routes/index.js";
 
@@ -20,9 +21,23 @@ app.use(helmet());
 /*
  * CORS
  */
+const allowedOrigins = ["http://localhost:3000", "http://localhost:8081"];
+
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: (origin, callback) => {
+      // Allow requests without an Origin header
+      // such as server-to-server requests.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   }),
 );
@@ -76,7 +91,7 @@ app.get("/", (req, res) => {
   res.send("Niramaya backend server API is LIVE.");
 });
 
-app.use("/api/v1", apiRoutes);
+app.use("/api/v1", apiLogger, apiRoutes);
 
 /*
  * 404 handler

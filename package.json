@@ -13,7 +13,9 @@
     "seed:ayurveda:dev": "cross-env NODE_ENV=development node src/utils/ayurveda.seed.js",
     "seed:yoga:dev": "cross-env NODE_ENV=development node src/utils/yoga.seed.js",
     "seed:ayurveda": "cross-env NODE_ENV=production node src/utils/ayurveda.seed.js",
-    "seed:yoga": "cross-env NODE_ENV=production node src/utils/yoga.seed.js"
+    "seed:yoga": "cross-env NODE_ENV=production node src/utils/yoga.seed.js",
+    "seed:admin:dev": "cross-env NODE_ENV=development node src/utils/admin.seed.js",
+    "seed:admin": "cross-env NODE_ENV=production node src/utils/admin.seed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

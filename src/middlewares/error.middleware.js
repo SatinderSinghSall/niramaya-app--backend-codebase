@@ -8,6 +8,11 @@ export const errorHandler = (error, req, res, next) => {
     name: error.name,
   });
 
+  res.locals.apiError = {
+    code: error.code,
+    message: error.message,
+  };
+
   let statusCode = error.statusCode || 500;
   let message = error.message || "Internal Server Error";
   let code = error.code || "INTERNAL_SERVER_ERROR";
