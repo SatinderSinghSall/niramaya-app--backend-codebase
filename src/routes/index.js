@@ -17,6 +17,7 @@ import appConfigRoutes from "./appConfig.routes.js";
 import maintenanceRoutes from "./maintenance.routes.js";
 import announcementRoutes from "./announcement.routes.js";
 import healthWellnessTipRoutes from "./healthWellnessTip.routes.js";
+import contactSubmissionRoutes from "./contactSubmission.routes.js";
 
 import adminRoutes from "./admin.routes.js";
 
@@ -57,5 +58,7 @@ router.use("/maintenance", maintenanceRoutes);
 router.use("/announcements", announcementRoutes);
 
 router.use("/health-wellness-tips", healthWellnessTipRoutes);
+
+router.use("/contact-submissions", contactSubmissionRoutes);
 
 export default router;

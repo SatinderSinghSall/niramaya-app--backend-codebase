@@ -16,6 +16,7 @@ import AppConfig from "../../models/appConfig.model.js";
 import Maintenance from "../../models/maintenance.model.js";
 import Announcement from "../../models/announcement.model.js";
 import HealthWellnessTip from "../../models/healthWellnessTip.model.js";
+import ContactSubmission from "../../models/contactSubmission.model.js";
 
 const count = (model, filter = {}) => model.countDocuments(filter);
 
@@ -317,6 +318,7 @@ export const getAdminDashboard = async (admin = null) => {
     announcements,
     maintenances,
     healthWellnessTips,
+    contactSubmissions,
   ] = await Promise.all([
     count(User),
     count(User, { isActive: true }),
@@ -342,6 +344,7 @@ export const getAdminDashboard = async (admin = null) => {
     count(Announcement),
     count(Maintenance),
     count(HealthWellnessTip),
+    count(ContactSubmission),
   ]);
 
   const [recentUsers, recentConsultations, systemHealth, apiActivity] =
@@ -383,6 +386,7 @@ export const getAdminDashboard = async (admin = null) => {
     ["healthwellnesstips", healthWellnessTips],
     ["maintenances", maintenances],
     ["apilogs", apiLogs],
+    ["contactsubmissions", contactSubmissions],
   ].map(([name, documents]) => ({
     name,
     documents,
