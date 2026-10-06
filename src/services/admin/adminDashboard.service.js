@@ -12,6 +12,8 @@ import Yoga from "../../models/yoga.model.js";
 import Settings from "../../models/settings.model.js";
 import Admin from "../../models/admin.model.js";
 import ApiLog from "../../models/apiLog.model.js";
+import AppConfig from "../../models/appConfig.model.js";
+import Maintenance from "../../models/maintenance.model.js";
 
 const count = (model, filter = {}) => model.countDocuments(filter);
 
@@ -309,6 +311,8 @@ export const getAdminDashboard = async (admin = null) => {
     admins,
     activeAdmins,
     apiLogs,
+    appConfigs,
+    maintenances,
   ] = await Promise.all([
     count(User),
     count(User, { isActive: true }),
@@ -330,6 +334,8 @@ export const getAdminDashboard = async (admin = null) => {
     count(Admin),
     count(Admin, { isActive: true }),
     count(ApiLog),
+    count(AppConfig),
+    count(Maintenance),
   ]);
 
   const [recentUsers, recentConsultations, systemHealth, apiActivity] =
@@ -366,6 +372,8 @@ export const getAdminDashboard = async (admin = null) => {
     ["ayurvedas", ayurveda],
     ["yogas", yoga],
     ["admins", admins],
+    ["appConfigs", appConfigs],
+    ["maintenances", maintenances],
     ["apilogs", apiLogs],
   ].map(([name, documents]) => ({
     name,
