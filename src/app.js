@@ -26,6 +26,7 @@ const allowedOrigins = [
   "http://localhost:3001",
   "http://localhost:8081",
   "https://niramaya-admin-panel.vercel.app",
+  "https://niramaya-mobile.vercel.app",
 ];
 
 app.use(
