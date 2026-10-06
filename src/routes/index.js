@@ -15,6 +15,8 @@ import searchRoutes from "./search.routes.js";
 import profileRoutes from "./profile.routes.js";
 import appConfigRoutes from "./appConfig.routes.js";
 import maintenanceRoutes from "./maintenance.routes.js";
+import announcementRoutes from "./announcement.routes.js";
+import healthWellnessTipRoutes from "./healthWellnessTip.routes.js";
 
 import adminRoutes from "./admin.routes.js";
 
@@ -51,5 +53,9 @@ router.use("/admin", adminRoutes);
 router.use("/app-config", appConfigRoutes);
 
 router.use("/maintenance", maintenanceRoutes);
+
+router.use("/announcements", announcementRoutes);
+
+router.use("/health-wellness-tips", healthWellnessTipRoutes);
 
 export default router;

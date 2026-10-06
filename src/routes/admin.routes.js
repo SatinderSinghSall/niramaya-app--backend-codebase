@@ -12,6 +12,8 @@ import adminProgressRoutes from "./adminProgress.routes.js";
 import adminApiLogRoutes from "./adminApiLog.routes.js";
 import adminAppConfigRoutes from "./adminAppConfig.routes.js";
 import adminMaintenanceRoutes from "./adminMaintenance.routes.js";
+import adminAnnouncementRoutes from "./adminAnnouncement.routes.js";
+import adminHealthWellnessTipRoutes from "./adminHealthWellnessTip.routes.js";
 
 const router = Router();
 
@@ -29,5 +31,7 @@ router.use("/progress", adminProgressRoutes);
 router.use("/api-logs", adminApiLogRoutes);
 router.use("/app-config", adminAppConfigRoutes);
 router.use("/maintenance", adminMaintenanceRoutes);
+router.use("/announcements", adminAnnouncementRoutes);
+router.use("/health-wellness-tips", adminHealthWellnessTipRoutes);
 
 export default router;
